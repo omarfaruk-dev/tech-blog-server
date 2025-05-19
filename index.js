@@ -32,25 +32,37 @@ async function run() {
       res.send('Server is running')
     })
 
-    // get all users
-   app.get('/users', async (req, res) => {
-      const result = await blogsCollection.find().toArray();
+    // get all blogs
+    app.get('/blogs', async (req, res) => {
+      //search from db
+      const { searchParams } = req.query;
+      let query = {};
+      if (searchParams) {
+        query = {
+          $or: [
+            { title: { $regex: searchParams, $options: "i" } },
+            { author: { $regex: searchParams, $options: "i" } }
+          ]
+        };
+      }
+
+      const result = await blogsCollection.find(query).toArray();
       res.send(result);
     })
-    // get a single user
-    app.get('/users/:id', async (req, res) => {
+    // get a single blog
+    app.get('/blogs/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await blogsCollection.findOne(query);
       res.send(result);
     })
     // post / create a user
-     app.post('/users', async (req, res) => {
+    app.post('/blogs', async (req, res) => {
       const userData = req.body;
       const result = await blogsCollection.insertOne(userData);
       res.send(result);
     });
-    
+
     // await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
